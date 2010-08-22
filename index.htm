@@ -23,6 +23,7 @@
               var AI=Math.floor(Math.random()*2);
               var gameBoard = new Array(3);
               var msgBox;
+              var start = true;
               function init(){
                   elem = document.getElementById('myCanvas');
                   msgBox = document.getElementById('status');
@@ -46,15 +47,7 @@
                   tempCanvas.height = elem.height;
                   container.appendChild(tempCanvas);
                   tempContext = tempCanvas.getContext('2d');
-                   drawGrid();
-                   reset();
-                   if(turn == AI){
-                       msg("Computer turns to play");
-                       play(minimax());
-                       
-                   }else{
-                       msg("Your turn to play");
-                   }
+                   restartGame();
                    elem.addEventListener('click', mouseclick, false);
                    elem.addEventListener('mousemove', mousehover, false);
                    tempCanvas.addEventListener('click', mouseclick, false);
@@ -79,7 +72,7 @@
                     return Math.floor((pos-1)/3);
                 }
                 function mousehover(ev){
-                   if(turn == getOpponent(AI)){
+                   if((turn == getOpponent(AI))&&(start)){
                     var x,y;
                     // Get the mouse position relative to the canvas element.
                     if (ev.layerX || ev.layerX == 0) { // Firefox
@@ -138,7 +131,7 @@
                     //lert("back");
                     //alert(position(x,y));
                     
-                    if(turn  == getOpponent(AI)){
+                    if((start)&&(turn  == getOpponent(AI))){
                         var pos = position(x,y);
                         //alert(""+pos);
                         
@@ -154,7 +147,7 @@
 
                    if(gameBoard[y][x]==-1){
                        gameBoard[y][x] = turn;
-                       tempContext.clearRect(0, 0, 660, 400);
+                       tempContext.clearRect(0, 0, elem.width, elem.height);
                     
                     if(turn == 1){
                         turn = 0;
@@ -168,7 +161,11 @@
                         
                     }
                    
-                   
+                   if(gameOver()){
+                      msg(whoWon());
+                      start = false;
+                      return;
+                   }
 
                    if(turn == AI){
                        msg("Computer turns to play");
@@ -183,7 +180,22 @@
                    }
                      
                 }
+                function whoWon(){
+                    if(checkWin(gameBoard,1)){
+			if(getOpponent(AI)==1){
+                            return "Congrats you won!!!";
+                        }
+                        return "Sorry the computer won.";
+                    }
+                    if(checkWin(gameBoard,0)){
+			if(getOpponent(AI)==0){
+                            return "Congrats you won!!!";
+                        }
+                        return "Sorry the computer won.";
+                    }
 
+                    return "The Game was Drawn";
+                }
                 function getOpponent(you){
                     if(you == 1){
                         return 0;
@@ -213,13 +225,90 @@
 
                     return 1;
                 }
+                function gameOver(){
+                    if(checkWin(gameBoard,1)){
+			return true;
+                    }
+                    if(checkWin(gameBoard,0)){
+			return true;
+                    }
+                    if((checkDraw(gameBoard,1))&&(checkDraw(gameBoard,0))){
+			return true;
+                    }
+
+                    return false;
+                }
+                function checkDraw(board, AI){
+                    var opp = getOpponent(AI);
+			var draw = false;
+			for(i=0; i<board.length;i++){
+				if(((board[i][0]!=opp)&&(board[i][1]!=opp)&&(board[i][2]!=opp))&&( (board[i][0]!=opp)||(board[i][1]!=opp)||(board[i][2]!=opp) )){
+					//System.out.println("Check Draw 1 "+ AI);
+					return false;
+				}
+				if(((board[0][i]!=opp)&&(board[1][i]!=opp)&&(board[2][i]!=opp))&&( (board[0][i]!=opp)||(board[1][i]!=opp)||(board[2][i]!=opp) ) ){
+					//System.out.println("Check Draw 2 "+ AI);
+					return false;
+				}
+
+			}
+			if(( (board[0][0]!=opp)&&(board[1][1]!=opp)&&(board[2][2]!=opp)) &&( (board[0][0]!=opp)||(board[1][1]!=opp)||(board[2][2]!=opp) ) ){
+				//System.out.println("Check Draw 3 "+ AI);
+				return false;
+			}
+			if(((board[0][2]!=opp)&&(board[1][1]!=opp)&&(board[2][0]!=opp))&&((board[0][2]!=opp)||(board[1][1]!=opp)||(board[2][0]!=opp)) ){
+				//System.out.println("Check Draw 4 "+ AI);
+				return false;
+			}
+	        //System.out.println("Check Draw 5 "+ AI);
+			return true;
+                }
+                function checkWin(board, AI){
+                    for(i=0; i< board.length;i++){
+                            if((board[i][0]==AI)&&(board[i][1]==AI)&&(board[i][2]==AI)){
+                                    //System.out.println("win 1");
+                                    return true;
+                            }
+                            if((board[0][i]==AI)&&(board[1][i]==AI)&&(board[2][i]==AI)){
+                                    //System.out.println("win 2");
+                                    return true;
+                            }
+
+                    }
+                    if((board[0][0]==AI)&&(board[1][1]==AI)&&(board[2][2]==AI)){
+                                //System.out.println("win 3");
+                                    return true;
+                            }
+                            if((board[0][2]==AI)&&(board[1][1]==AI)&&(board[2][0]==AI)){
+                                    //System.out.println("win 4");
+                                    return true;
+                            }
+
+                    return false;
+                }
+                function restartGame(){
+                    tempContext.clearRect(0, 0, elem.width, elem.height);
+                    context.clearRect(0, 0, elem.width, elem.height);
+                    AI=Math.floor(Math.random()*2);
+                    drawGrid();
+                    reset();
+                    if(turn == AI){
+                       msg("Computer turns to play");
+                       play(minimax());
+
+                    }else{
+                       msg("Your turn to play");
+                    }
+                }
                 function drawO(pos){
                     var xBegin = getCorr(pos,1);
                     var yBegin = getCorr(pos, 2);
                     var xEnd = getCorr(pos,3);
                     var yEnd = getCorr(pos,4);
+                    var buffer = 20;
                     var r = (xEnd - xBegin)/2;
-                    var x_cen = xBegin+ r;
+                    r = r- buffer;
+                    var x_cen = xBegin+ ((xEnd - xBegin)/2);
                     var y_cen = yBegin+ ((yEnd-yBegin)/2);
                     var buffer =10;
                     r -= buffer;
@@ -235,7 +324,7 @@
                 function drawX(pos){
                     
                     
-                    var buffer = 0;
+                    var buffer = 20;
                     var xBegin = getCorr(pos,1);
                     var yBegin = getCorr(pos, 2);
                     var xEnd = getCorr(pos,3);
