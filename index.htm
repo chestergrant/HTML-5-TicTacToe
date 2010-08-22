@@ -1,0 +1,365 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+        <title>HTML 5 TicTacToe</title>
+
+        <link rel=stylesheet href=style.css type=text/css>
+
+        <script type="text/javascript"><!--
+            window.addEventListener('load', function () {
+              // Get the canvas element.
+              var context, elem,tempContext, tempCanvas;
+              var y_off = 10;
+              var scr_height = 400;
+              var scr_width = 660;
+              var lineWidth =10;
+              var lineHeight = scr_height-2*y_off;
+              var x_off = (scr_width - lineHeight)/2;
+              var space = lineHeight/3;
+              var lastHover =-1;
+              var turn = 1;
+              var AI=Math.floor(Math.random()*2);
+              var gameBoard = new Array(3);
+              var msgBox;
+              function init(){
+                  elem = document.getElementById('myCanvas');
+                  msgBox = document.getElementById('status');
+                  if (!elem || !elem.getContext) {
+                    return;
+                  }
+
+                  // Get the canvas 2d context.
+                  context = elem.getContext('2d');
+                  if (!context) {                      
+                    return;
+                  }
+                  //TO DO,  add your application code
+                  var container = elem.parentNode;
+                  var tempCanvas = document.createElement('canvas');
+                  if(!tempCanvas||!tempCanvas.getContext){
+                      return;
+                  }
+                  tempCanvas.id ='tempView';
+                  tempCanvas.width = elem.width;
+                  tempCanvas.height = elem.height;
+                  container.appendChild(tempCanvas);
+                  tempContext = tempCanvas.getContext('2d');
+                   drawGrid();
+                   reset();
+                   if(turn == AI){
+                       msg("Computer turns to play");
+                       play(minimax());
+                       
+                   }else{
+                       msg("Your turn to play");
+                   }
+                   elem.addEventListener('click', mouseclick, false);
+                   elem.addEventListener('mousemove', mousehover, false);
+                   tempCanvas.addEventListener('click', mouseclick, false);
+                   tempCanvas.addEventListener('mousemove', mousehover, false);
+                  }
+                function reset(){
+                    for(var i = 0; i< 3;i++){
+                        gameBoard[i] = new Array(3);
+                        gameBoard[i][0]=-1;
+                        gameBoard[i][1]=-1;
+                        gameBoard[i][2]=-1;
+                    }
+                }
+                function msg(theMsg){
+                    var str='<span class="green">Status:&nbsp;</span>';
+                    msgBox.innerHTML=str+' '+theMsg;
+                }
+                function xPos(pos){
+                    return (pos-1)%3;
+                }
+                function yPos(pos){
+                    return Math.floor((pos-1)/3);
+                }
+                function mousehover(ev){
+                   if(turn == getOpponent(AI)){
+                    var x,y;
+                    // Get the mouse position relative to the canvas element.
+                    if (ev.layerX || ev.layerX == 0) { // Firefox
+                      x = ev.layerX;
+                      y = ev.layerY;
+                    } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+                      x = ev.offsetX;
+                      y = ev.offsetY;
+                    }
+                    //x -= 200;
+                    //y -= 20;
+                    var pos = position(x,y);
+                    //alert(""+pos);
+                    if(pos != -1){
+                        if(lastHover != pos){
+                            if(gameBoard[yPos(pos)][xPos(pos)]==-1){
+                                drawHighlight(pos);
+                                lastHover = pos;
+                            }
+                        }
+                    }
+                   }
+                }
+
+                function drawHighlight(pos){
+                    
+                    var xBegin = getCorr(pos,1);
+                    var yBegin = getCorr(pos, 2);
+                    var xEnd = getCorr(pos,3);
+                    var yEnd = getCorr(pos,4);
+                    tempContext.fillStyle   = '#7bc00a';
+                    tempContext.strokeStyle = '#7bc00a';
+
+                    tempContext.clearRect(0, 0, 660, 400);
+                    tempContext.fillStyle   = 'rgba(123,192,10,0.5)';
+                    //alert("in2");
+                    tempContext.strokeStyle = '#7bc00a';
+                    tempContext.lineWidth   = 1;
+                    //alert(xBegin+", "+yBegin);
+                    tempContext.fillRect(xBegin,yBegin,xEnd-xBegin, yEnd-yBegin );
+
+                }
+                function mouseclick(ev){
+
+                    var x,y;
+                    // Get the mouse position relative to the canvas element.
+                    if (ev.layerX || ev.layerX == 0) { // Firefox
+                      x = ev.layerX;
+                      y = ev.layerY;
+                    } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+                      x = ev.offsetX;
+                      y = ev.offsetY;
+                    }
+                    //x -= 200;
+                    //y -= 20;
+                    //lert("back");
+                    //alert(position(x,y));
+                    
+                    if(turn  == getOpponent(AI)){
+                        var pos = position(x,y);
+                        //alert(""+pos);
+                        
+                        if(pos != -1){
+                            play(pos);
+                        }
+                    }
+                    
+                }
+                function play(pos){
+                   var x = xPos(pos);
+                   var y = yPos(pos);
+
+                   if(gameBoard[y][x]==-1){
+                       gameBoard[y][x] = turn;
+                       tempContext.clearRect(0, 0, 660, 400);
+                    
+                    if(turn == 1){
+                        turn = 0;
+                        
+                        drawX(pos);
+                        
+                         
+                    }else{
+                        turn =1;
+                        drawO(pos);
+                        
+                    }
+                   
+                   
+
+                   if(turn == AI){
+                       msg("Computer turns to play");
+                       var inp= minimax();
+                       //sleep(4000);
+                       setTimeout(function(){play(inp);},1000);
+                       //sleep(4000);
+
+                     }else{
+                       msg("Your turn to play");
+                     }
+                   }
+                     
+                }
+
+                function getOpponent(you){
+                    if(you == 1){
+                        return 0;
+                    }
+                    return 1;
+                }
+                function corrToPos(i,j){
+                    return (i*3)+(j+1);
+                }
+                function sleep(count){
+                    var ans= 0;
+                    for(i=0; i< count;i++){
+                        for(j=0; j< count;j++){
+                            ans = ans*ans;
+                        }
+                    }
+                }
+                function minimax(){
+                    
+                    for(i =0; i<3; i++){
+                        for(j =0; j<3; j++){
+                            if(gameBoard[i][j]==-1){
+                                return corrToPos(i,j);
+                            }
+                        }
+                    }
+
+                    return 1;
+                }
+                function drawO(pos){
+                    var xBegin = getCorr(pos,1);
+                    var yBegin = getCorr(pos, 2);
+                    var xEnd = getCorr(pos,3);
+                    var yEnd = getCorr(pos,4);
+                    var r = (xEnd - xBegin)/2;
+                    var x_cen = xBegin+ r;
+                    var y_cen = yBegin+ ((yEnd-yBegin)/2);
+                    var buffer =10;
+                    r -= buffer;
+                    context.lineWidth = lineWidth;
+                    context.fillStyle   = '#FFFFFF';
+                    context.strokeStyle = '#FFFFFF';
+                    context.beginPath();
+                    context.arc(x_cen,y_cen,r,0,Math.PI*2,true);
+                    context.closePath();
+                    context.stroke();
+
+                }
+                function drawX(pos){
+                    
+                    
+                    var buffer = 0;
+                    var xBegin = getCorr(pos,1);
+                    var yBegin = getCorr(pos, 2);
+                    var xEnd = getCorr(pos,3);
+                    var yEnd = getCorr(pos,4);
+                    var sin45 = 0.850903525;
+                    var o = sin45* lineWidth;
+                    //draw one side of the x
+                    context.lineWidth = lineWidth;
+                    context.fillStyle   = '#FFFFFF';
+                    context.strokeStyle = '#FFFFFF';
+                    context.beginPath();
+                    context.moveTo(xBegin+buffer,yBegin+buffer);                    
+                    context.lineTo(xEnd-buffer,yEnd-buffer);                  
+                    
+                    //draw other side of x
+                    
+                    context.moveTo(xBegin+buffer,yEnd-buffer);
+                    //context.lineTo(xBegin+buffer+o,yEnd-buffer);
+                    //context.lineTo(xEnd-buffer,yBegin+buffer+o);
+                    context.lineTo(xEnd-buffer,yBegin+buffer);
+                    //context.lineTo(xBegin+buffer,yEnd-buffer-o);
+                    context.stroke();
+                    context.closePath();
+                    
+                  
+                    
+                }
+                function getCorr(pos, type){
+                    var start_x = (pos-1)%3;
+                    var start_y = ((pos-(start_x +1))/3);
+                    //alert(start_x+" "+start_y);
+                    var addCorr = space;//+lineWidth;
+                    
+                    var xBegin = (addCorr *start_x) + x_off;
+                    var xEnd = xBegin+space;
+                    var yBegin = (addCorr *start_y) + y_off;
+                    var yEnd = yBegin+space;
+                    if(type==1){
+                        return xBegin;
+                    }else if(type == 2){
+                        return yBegin;
+                    }else if(type == 3){
+                        return xEnd;
+                    }else{
+                        return yEnd;
+                    }
+                }
+                function position(x,y){
+                    for(var i=1; i<10;i++){
+                        if(checkBox(i,x,y)){
+                            return i;
+                        }
+                        
+                    }
+                    return -1;
+                }
+                function checkBox(i, x, y){
+                    
+                    
+                    var xBegin = getCorr(i,1);
+                    var yBegin = getCorr(i,2);
+                    var xEnd = getCorr(i,3);
+                    var yEnd = getCorr(i,4);
+                    /*alert("checking: "+i+" x: "+x+" y: "+y+" ("+xBegin+" , "+yBegin+")"+" ("+xEnd+" , "+yEnd+")");
+                    if(x>=xBegin){
+                        alert("Part: "+x+">="+xBegin);
+                         if(x<=xEnd){
+                             alert("Part: "+x+"<="+xEnd);
+                         }else{
+                             alert("Part: "+x+">"+xEnd);
+                         }
+                    }else{
+                        alert("Part: "+x+"<"+xBegin);
+                        if(x<=xEnd){
+                             alert("Part: "+x+"<="+xEnd);
+                         }else{
+                             alert("Part: "+x+">"+xEnd);
+                         }
+                    }*/
+                    if((x>=xBegin)&&(x<=xEnd)){                        
+                        if((y>=yBegin)&&(y<=yEnd)){                            
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                function drawGrid(){
+                  context.fillStyle   = '#7bc00a'; 
+                  context.strokeStyle = '#7bc00a';
+                  context.lineWidth   = 1;
+                  context.fillRect(x_off+space,y_off,lineWidth, lineHeight );
+                  context.fillRect(x_off+2*space,y_off,lineWidth, lineHeight );
+                  context.fillRect(x_off,y_off+(lineHeight/3),lineHeight, lineWidth );
+                  context.fillRect(x_off,y_off+2*(lineHeight/3),lineHeight, lineWidth );
+
+                }
+               init();
+            }, false);
+                // --></script>
+
+    </head>
+    <body>
+        <header>
+            
+        </header>
+                   <div id="sec1">
+                    
+                        
+                            <canvas id="myCanvas" width="660" height="400">
+                                Your browser does not have support for Canvas.
+                            </canvas>
+                        
+                            <div id="status"><span class="green">Status:&nbsp;</span> Your Turn</div>
+                    
+                    </div>
+                    <div id="start"><center><a href="" class="btn">Start</a>
+</center>
+                    </div>
+                <aside>
+                </aside>
+        <footer>
+        </footer>
+            
+            
+    </body>
+</html>
