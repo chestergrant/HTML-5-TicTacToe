@@ -1,8 +1,5 @@
 html, body, p{ margin: 0; padding: 0; border: 0;}
 body{ background: #ffffff; color: #111111; font-family: Georgia, "Times New Roman", Times,serif; padding: 20px; width: 960px;}
-header {}
-article{}
-section{ }
 #tempView{ position: absolute; top: 1px; left: 1px; background-color: rgba(255,255,255,0);}
 #myCanvas{ }
 #sec1 { position: relative; margin-top: 0px; margin-left: 180px; background: #c1c1c1; -moz-border-radius: 5px; -webkit-border-radius: 5px; -webkit-box-shadow: 5px 5px 20px #000; -moz-box-shadow: 5px 5px 20px #ccc; -khtml-border-radius: 5px; border-radius: 5px; padding: 1px; width: 660px;}
@@ -14,4 +11,3 @@ a.btn:hover { background-color: #245191; text-shadow: -1px -1px 2px #465f97; bor
 canvas { background: #c1c1c1;}
 section p { margin: 0 0 60px 250px; font-size: 90px; color: #cccccc; text-shadow: 0px 1px 5px #000
 }
-footer{}
