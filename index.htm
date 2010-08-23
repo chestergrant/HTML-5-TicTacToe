@@ -1,4 +1,4 @@
-<!DOCTYPE>
+<!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -6,7 +6,7 @@
         <title>HTML 5 TicTacToe</title>
 
         <link rel=stylesheet href=style.css type=text/css>
-        <script src="commons.js">
+        <script type="text/javascript"  src="commons.js">
         </script>
 
         <script type="text/javascript"><!--
@@ -26,29 +26,31 @@
               var msgBox;
               var start = false;
               var firstPlay = true;
-              var numPlays
-              var worker = new Worker("commons.js");
+              var numPlays;              
+              var worker = new Worker('commons.js');
+              
               worker.onmessage = function (evt) {
-                        
                         play(evt.data);
               };
 
               worker.onerror = function (evt) {
                         alert("An error has occur!");
               };
-
+              
             window.addEventListener('load', function () {
               
               function init(){
                   elem = document.getElementById('myCanvas');
                   msgBox = document.getElementById('status');
                   if (!elem || !elem.getContext) {
+                    alert("Error can't get context");
                     return;
                   }
 
                   // Get the canvas 2d context.
                   context = elem.getContext('2d');
-                  if (!context) {                      
+                  if (!context) {
+                      alert("Error can't get context");
                     return;
                   }
                   //TO DO,  add your application code
