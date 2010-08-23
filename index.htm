@@ -6,6 +6,8 @@
         <title>HTML 5 TicTacToe</title>
 
         <link rel=stylesheet href=style.css type=text/css>
+        <script src="commons.js">
+        </script>
 
         <script type="text/javascript"><!--
             // Get the canvas element.
@@ -24,6 +26,17 @@
               var msgBox;
               var start = false;
               var firstPlay = true;
+              var numPlays
+              var worker = new Worker("commons.js");
+              worker.onmessage = function (evt) {
+                        
+                        play(evt.data);
+              };
+
+              worker.onerror = function (evt) {
+                        alert("An error has occur!");
+              };
+
             window.addEventListener('load', function () {
               
               function init(){
@@ -49,17 +62,30 @@
                   tempCanvas.height = elem.height;
                   container.appendChild(tempCanvas);
                   tempContext = tempCanvas.getContext('2d');
+
                    restartGame();
                    
                    elem.addEventListener('click', mouseclick, false);
                    elem.addEventListener('mousemove', mousehover, false);
                    tempCanvas.addEventListener('click', mouseclick, false);
                    tempCanvas.addEventListener('mousemove', mousehover, false);
-                   //document.addEventListener('findload', function(event) { restartGame(); }, false);
-                  }
+                 }
                 
                init();
             }, false);
+            function convertData(board, piece){
+                var data = new Array(4);
+
+                for(var i=0; i<3;i++){
+                    data[i] = new Array(3);
+                    for(var j=0; j<3;j++){
+                        data[i][j] = board[i][j];
+                    }
+                }
+                data[3] = new Array(3);
+                data[3][0]= piece
+                return data;
+            }
             function reset(){
                     for(var i = 0; i< 3;i++){
                         gameBoard[i] = new Array(3);
@@ -91,10 +117,9 @@
                       x = ev.offsetX;
                       y = ev.offsetY;
                     }
-                    //x -= 200;
-                    //y -= 20;
+                    
                     var pos = position(x,y);
-                    //alert(""+pos);
+                    
                     if(pos != -1){
                         if(lastHover != pos){
                             if(gameBoard[yPos(pos)][xPos(pos)]==-1){
@@ -117,10 +142,10 @@
 
                     tempContext.clearRect(0, 0, 660, 400);
                     tempContext.fillStyle   = 'rgba(123,192,10,0.5)';
-                    //alert("in2");
+                    
                     tempContext.strokeStyle = '#7bc00a';
                     tempContext.lineWidth   = 1;
-                    //alert(xBegin+", "+yBegin);
+                    
                     tempContext.fillRect(xBegin,yBegin,xEnd-xBegin, yEnd-yBegin );
 
                 }
@@ -135,14 +160,9 @@
                       x = ev.offsetX;
                       y = ev.offsetY;
                     }
-                    //x -= 200;
-                    //y -= 20;
-                    //lert("back");
-                    //alert(position(x,y));
-
                     if((start)&&(turn  == getOpponent(intel))){
                         var pos = position(x,y);
-                        //alert(""+pos);
+                        
 
                         if(pos != -1){
                             play(pos);
@@ -151,10 +171,10 @@
 
                 }
                 function play(pos){
-                    //if(pos==5)alert("hehe0");
+                    
                    var x = xPos(pos);
                    var y = yPos(pos);
-                    //if(pos==5)alert("hehe");
+                    
                    if(gameBoard[y][x]==-1){
                        gameBoard[y][x] = turn;
                        firstPlay = false;
@@ -168,25 +188,15 @@
                         drawO(pos);
 
                     }
-                     //if(pos==5)alert("hehe8");
+                    
                    if(gameOver(gameBoard)){
                       msg(whoWon());
                       start = false;
                       return;
                    }
-                    //if(pos==5)alert("hehe9");
+                    
                    computerPlay();
-                    //if(pos==5)alert("hehe");
-                   /*if(turn == AI){
-                       msg("Computer turns to play");
-                       var inp= minimax(gameBoard, AI);
-                       //sleep(4000);
-                       setTimeout(function(){play(inp);},1000);
-                       //sleep(4000);
-
-                     }else{
-                       msg("Your turn to play");
-                     }*/
+                    
                    }
 
                 }
@@ -206,190 +216,7 @@
 
                     return "The Game was Drawn";
                 }
-                function getOpponent(you){
-                    if(you == 1){
-                        return 0;
-                    }
-                    return 1;
-                }
-                function corrToPos(ix,jy){
-                    return (ix*3)+(jy+1);
-                }
-
-
-                function copyBoard(board){
-                    var newBoard = new Array(board.length);
-                    for(var k = 0; k <board.length; k++){
-                        newBoard[k] = new Array(board.length);
-                        for(var l = 0; l < board.length; l++){
-                            newBoard[k][l] = board[k][l];
-                        }
-                    }
-                    return newBoard;
-                }
-                function maxEvaluation(board,depth){
-                    var ans = new Array(2);
-                    ans[0] = 0;
-                    ans[1] = 0;
-                    if(checkWin(board,1)){
-                            ans[1] = 2*(10-depth);
-                            return ans;
-                    }
-                    if(checkWin(board,0)){
-                            ans[1] = -2*(10-depth);
-                            return ans;
-                    }
-                    return ans;
-                }
-                function maxMove(board, piece, depth){
-                    //alert("haaa");
-                    var bestMove = new Array(2);
-                    var newBoard = copyBoard(board);
-                    if(gameOver(board)){
-                            //alert(depth+'');
-                            return maxEvaluation(board, depth);
-                    }
-                    var first = 0;
-                    for(var i = 0; i< board.length; i++){
-                            for(var j=0; j<board.length; j++){
-                                    if(newBoard[i][j] == -1){
-                                            newBoard[i][j] = piece;
-                                            var value = minMove(newBoard, getOpponent(piece),depth+1);
-                                            if(first==0){
-                                                    bestMove[0] = corrToPos(i,j);
-                                                    bestMove[1] = value[1];
-                                                    first++;
-                                            }
-                                            if(bestMove[1] < value[1]){
-                                                    bestMove[0] = corrToPos(i,j);
-                                                    bestMove[1] = value[1];
-                                                    //alert(value+" the best");
-                                            }
-                                            value= null;
-                                            newBoard[i][j] = -1;
-                                    }
-                            }
-                    }
-                    first=null;
-                    newBoard = null;
-                    return bestMove;
-                }
-                function minMove(board, piece, depth){
-                    var bestMove = new Array(2);
-                    var newBoard = copyBoard(board);
-
-                    if(gameOver(board)){
-                            //alert(depth+'');
-                            return maxEvaluation(board, depth);
-                    }
-                    var first = 0;
-                    for(var i = 0; i< board.length; i++){
-                            for(var j=0; j<board.length; j++){
-                                    if(newBoard[i][j] == -1){
-                                            newBoard[i][j] = piece;
-                                            var value = maxMove(newBoard, getOpponent(piece),depth+1);
-                                            //System.out.println(value);
-                                            if(first==0){
-                                                    bestMove[0] = corrToPos(i,j);
-                                                    bestMove[1] = value[1];
-                                                    first++;
-                                            }
-                                            if(bestMove[1] > value[1]){
-                                                    bestMove[0] = corrToPos(i,j);
-                                                    bestMove[1] = value[1];
-                                            }
-                                            value = null;
-                                            newBoard[i][j] = -1;
-                                    }
-                            }
-                    }
-                    first=null;
-                    newBoard = null;
-                    return bestMove;
-                }
-                function minimax(board,piece){
-                    var ans = new Array(2);
-                    //alert("we are in");
-
-                    if(piece == 1){
-                             ans = maxMove(board, piece,0);
-                            return ans[0];
-                    }else{
-                            ans = minMove(board, piece,0);
-                            return ans[0];
-                    }
-                   /* simply AI
-                    * for(i =0; i<3; i++){
-                        for(j =0; j<3; j++){
-                            if(gameBoard[i][j]==-1){
-                                return corrToPos(i,j);
-                            }
-                        }
-                    }
-
-                    return 1;*/
-                }
-                function gameOver(board){
-                    if(checkWin(board,1)){
-			return true;
-                    }
-                    if(checkWin(board,0)){
-			return true;
-                    }
-                    if((checkDraw(board,1))&&(checkDraw(board,0))){
-			return true;
-                    }
-
-                    return false;
-                }
-                function checkDraw(board, AI){
-                    var opp = getOpponent(AI);
-			var draw = false;
-			for(var i=0; i<board.length;i++){
-				if(((board[i][0]!=opp)&&(board[i][1]!=opp)&&(board[i][2]!=opp))&&( (board[i][0]!=opp)||(board[i][1]!=opp)||(board[i][2]!=opp) )){
-					//System.out.println("Check Draw 1 "+ AI);
-					return false;
-				}
-				if(((board[0][i]!=opp)&&(board[1][i]!=opp)&&(board[2][i]!=opp))&&( (board[0][i]!=opp)||(board[1][i]!=opp)||(board[2][i]!=opp) ) ){
-					//System.out.println("Check Draw 2 "+ AI);
-					return false;
-				}
-
-			}
-			if(( (board[0][0]!=opp)&&(board[1][1]!=opp)&&(board[2][2]!=opp)) &&( (board[0][0]!=opp)||(board[1][1]!=opp)||(board[2][2]!=opp) ) ){
-				//System.out.println("Check Draw 3 "+ AI);
-				return false;
-			}
-			if(((board[0][2]!=opp)&&(board[1][1]!=opp)&&(board[2][0]!=opp))&&((board[0][2]!=opp)||(board[1][1]!=opp)||(board[2][0]!=opp)) ){
-				//System.out.println("Check Draw 4 "+ AI);
-				return false;
-			}
-	        //System.out.println("Check Draw 5 "+ AI);
-			return true;
-                }
-                function checkWin(board, AI){
-                    for(var i=0; i< board.length;i++){
-                            if((board[i][0]==AI)&&(board[i][1]==AI)&&(board[i][2]==AI)){
-                                    //System.out.println("win 1");
-                                    return true;
-                            }
-                            if((board[0][i]==AI)&&(board[1][i]==AI)&&(board[2][i]==AI)){
-                                    //System.out.println("win 2");
-                                    return true;
-                            }
-
-                    }
-                    if((board[0][0]==AI)&&(board[1][1]==AI)&&(board[2][2]==AI)){
-                                //System.out.println("win 3");
-                                    return true;
-                            }
-                            if((board[0][2]==AI)&&(board[1][1]==AI)&&(board[2][0]==AI)){
-                                    //System.out.println("win 4");
-                                    return true;
-                            }
-
-                    return false;
-                }
+                                
                 function restartGame(){
                     start= true;
                     tempContext.clearRect(0, 0, elem.width, elem.height);
@@ -401,13 +228,14 @@
                     
                 }
                 function computerPlay(){
-                    //alert("Got called");
+                   
                     if(start){
                       if(turn == intel){
                            msg("Computer turns to play");
                            if(firstPlay){play(5); return;}
-                           var ans = minimax(gameBoard,intel);
-                           play(ans);
+                           
+                           worker.postMessage(convertData(gameBoard,intel));//minimax(gameBoard,intel);
+                           
 
                         }else{
                            msg("Your turn to play");
@@ -445,6 +273,7 @@
                     var yEnd = getCorr(pos,4);
                     var sin45 = 0.850903525;
                     var o = sin45* lineWidth;
+
                     //draw one side of the x
                     context.lineWidth = lineWidth;
                     context.fillStyle   = '#FFFFFF';
@@ -456,10 +285,9 @@
                     //draw other side of x
 
                     context.moveTo(xBegin+buffer,yEnd-buffer);
-                    //context.lineTo(xBegin+buffer+o,yEnd-buffer);
-                    //context.lineTo(xEnd-buffer,yBegin+buffer+o);
+                    
                     context.lineTo(xEnd-buffer,yBegin+buffer);
-                    //context.lineTo(xBegin+buffer,yEnd-buffer-o);
+                    
                     context.stroke();
                     context.closePath();
 
@@ -502,22 +330,7 @@
                     var yBegin = getCorr(i,2);
                     var xEnd = getCorr(i,3);
                     var yEnd = getCorr(i,4);
-                    /*alert("checking: "+i+" x: "+x+" y: "+y+" ("+xBegin+" , "+yBegin+")"+" ("+xEnd+" , "+yEnd+")");
-                    if(x>=xBegin){
-                        alert("Part: "+x+">="+xBegin);
-                         if(x<=xEnd){
-                             alert("Part: "+x+"<="+xEnd);
-                         }else{
-                             alert("Part: "+x+">"+xEnd);
-                         }
-                    }else{
-                        alert("Part: "+x+"<"+xBegin);
-                        if(x<=xEnd){
-                             alert("Part: "+x+"<="+xEnd);
-                         }else{
-                             alert("Part: "+x+">"+xEnd);
-                         }
-                    }*/
+                    
                     if((x>=xBegin)&&(x<=xEnd)){
                         if((y>=yBegin)&&(y<=yEnd)){
                             return true;
@@ -536,8 +349,7 @@
                   context.fillRect(x_off,y_off+2*(lineHeight/3),lineHeight, lineWidth );
 
                 }
-                //window.setInterval(function(){computerPlay();},1000);
-            //window.setTimeout(function(){restartGame();},1000);
+                
                 // --></script>
 
     </head>
